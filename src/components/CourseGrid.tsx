@@ -185,12 +185,17 @@ export function CourseGrid({
                 {/* 每天格子 */}
                 {ALL_DAYS.map((day) => {
                   if (isCovered(day, period)) {
-                    return <div key={`${day}-${period}`} />
+                    return null
                   }
 
                   const startingCourses = coursesStartingAt(day, period)
                   const highlight = isCurrentInCell(day, period)
                   const isToday = day === todayDay
+
+                  // 计算该格最大跨节数（多门课取最大）
+                  const maxSpan = startingCourses.length > 0
+                    ? Math.max(...startingCourses.map(c => c.endPeriod - c.startPeriod + 1))
+                    : 1
 
                   return (
                     <div
@@ -199,6 +204,7 @@ export function CourseGrid({
                         isToday ? 'bg-paper-dark/40' : ''
                       } ${highlight ? 'current-period-highlight' : ''}`}
                       style={{
+                        gridRow: maxSpan > 1 ? `span ${maxSpan}` : undefined,
                         minHeight: isMobile ? '36px' : '62px',
                         borderBottom: '0.5px solid rgba(191, 185, 175, 0.25)',
                         borderRight: '0.5px solid rgba(191, 185, 175, 0.25)',
@@ -207,7 +213,6 @@ export function CourseGrid({
                       {startingCourses.map((course) => {
                         const bg = getCourseColor(course.name)
                         const borderColor = getCourseBorderColor(course.name)
-                        const span = course.endPeriod - course.startPeriod + 1
                         const idx = getCourseIndex()
 
                         return (
@@ -219,7 +224,6 @@ export function CourseGrid({
                             style={{
                               backgroundColor: bg,
                               borderLeft: `1.5px solid ${borderColor}`,
-                              gridRow: span > 1 ? `span ${span}` : undefined,
                               animationDelay: `${idx * 15}ms`,
                               padding: isMobile ? '1px 1.5px' : '2px 6px',
                               borderRadius: isMobile ? '3px' : '6px',
