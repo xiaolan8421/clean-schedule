@@ -131,10 +131,11 @@ export function CourseGrid({
   courseIndex.current = 0
 
   // ─── 布局参数 ───
-  const gap = isMobile ? 3 : 4
-  const timeColW = isMobile ? '34px' : '48px'
-  const dayCols = isMobile ? 'repeat(7, minmax(0, 1fr))' : 'repeat(7, 1fr)'
-  const rowH = isMobile ? 40 : 56
+  const gap = isMobile ? 4 : 5
+  // 移动端：每列至少 90px，超出屏幕自动横向滚动
+  const timeColW = isMobile ? '36px' : '48px'
+  const dayCols = isMobile ? 'repeat(7, minmax(90px, 1fr))' : 'repeat(7, 1fr)'
+  const rowH = isMobile ? 44 : 56
 
   return (
     <div className="relative">
