@@ -4,7 +4,7 @@ import { Share2, Plus, Trash2, Settings, MoreHorizontal, Check } from 'lucide-re
 import type { Semester, Course } from '../types'
 import {
   loadSchedules, saveSchedules, getCurrentWeekNumber,
-  getDayName,
+  generateId, getDayName,
 } from '../utils/scheduleUtils'
 import { CourseGrid } from '../components/CourseGrid'
 import { ShareMenu } from '../components/ShareMenu'
@@ -123,11 +123,28 @@ export function SchedulePage() {
           newCourses[idx] = course
           return { ...s, courses: newCourses }
         }
-        return s
+        // 新课程
+        return { ...s, courses: [...s.courses, course] }
       })
     )
     setEditingCourse(null)
   }, [])
+
+  const handleAddCourse = useCallback(
+    (day: number, period: number) => {
+      if (!currentSemester) return
+      setEditingCourse({
+        id: generateId(),
+        name: '',
+        dayOfWeek: day,
+        startPeriod: period,
+        endPeriod: Math.min(period + 1, 11),
+        weekType: 'all',
+        semesterId: currentSemester.id,
+      })
+    },
+    [currentSemester]
+  )
 
   const handleDeleteCourse = useCallback((courseId: string) => {
     setSchedules((prev) =>
@@ -329,6 +346,7 @@ export function SchedulePage() {
             semesterStartDate={currentSemester.startDate}
             onEditCourse={setEditingCourse}
             onDeleteCourse={handleDeleteCourse}
+            onAddCourse={handleAddCourse}
           />
         )}
       </main>

@@ -9,6 +9,7 @@ interface CourseGridProps {
   semesterStartDate: string
   onEditCourse: (course: Course) => void
   onDeleteCourse: (courseId: string) => void
+  onAddCourse: (day: number, period: number) => void
   readOnly?: boolean
 }
 
@@ -28,6 +29,7 @@ export function CourseGrid({
   semesterStartDate,
   onEditCourse,
   onDeleteCourse,
+  onAddCourse,
   readOnly = false,
 }: CourseGridProps) {
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
@@ -223,10 +225,14 @@ export function CourseGrid({
                       <div
                         key={`${day}-${period}`}
                         className={highlight ? 'current-period-highlight' : ''}
+                        onClick={() => {
+                          if (!readOnly) onAddCourse(day, period)
+                        }}
                         style={{
                           minHeight: `${rowH}px`,
                           borderRadius: '8px',
                           background: isToday ? 'rgba(200,141,26,0.03)' : 'rgba(0,0,0,0.01)',
+                          cursor: readOnly ? 'default' : 'pointer',
                         }}
                       />
                     )

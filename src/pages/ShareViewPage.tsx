@@ -151,6 +151,7 @@ export function ShareViewPage() {
           semesterStartDate={semester.startDate}
           onEditCourse={() => {}}
           onDeleteCourse={() => {}}
+          onAddCourse={() => {}}
           readOnly
         />
       </main>

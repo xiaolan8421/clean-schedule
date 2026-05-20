@@ -32,9 +32,11 @@ export function CourseEditModal({
   const [weekEnd, setWeekEnd] = useState(16)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
+  const isNew = !course?.name
+
   useEffect(() => {
     if (course) {
-      setName(course.name)
+      setName(course.name || '')
       setTeacher(course.teacher || '')
       setLocation(course.location || '')
       setDayOfWeek(course.dayOfWeek)
@@ -50,10 +52,11 @@ export function CourseEditModal({
   if (!course) return null
 
   const handleSave = () => {
-    if (!name.trim()) return
+    const trimmedName = name.trim()
+    if (!trimmedName) return
     onSave({
-      ...course,
-      name: name.trim(),
+      id: course.id,
+      name: trimmedName,
       teacher: teacher.trim() || undefined,
       location: location.trim() || undefined,
       dayOfWeek,
@@ -62,6 +65,7 @@ export function CourseEditModal({
       weekType,
       weekStart: weekType === 'range' ? weekStart : undefined,
       weekEnd: weekType === 'range' ? weekEnd : undefined,
+      semesterId: course.semesterId,
     })
   }
 
@@ -80,7 +84,7 @@ export function CourseEditModal({
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto shadow-xl p-5">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">编辑课程</h3>
+          <h3 className="text-lg font-semibold">{isNew ? '添加课程' : '编辑课程'}</h3>
           <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-full transition-colors">
             <X className="w-5 h-5" />
           </button>
@@ -177,18 +181,24 @@ export function CourseEditModal({
         </div>
 
         <div className="flex items-center justify-between mt-5 gap-3">
-          <button onClick={handleDelete}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-              showDeleteConfirm ? 'bg-red-500 text-white hover:bg-red-600' : 'text-red-500 hover:bg-red-50'
-            }`}>
-            <Trash2 className="w-4 h-4" />
-            {showDeleteConfirm ? '确认删除' : '删除'}
-          </button>
+          {!isNew ? (
+            <button onClick={handleDelete}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                showDeleteConfirm ? 'bg-red-500 text-white hover:bg-red-600' : 'text-red-500 hover:bg-red-50'
+              }`}>
+              <Trash2 className="w-4 h-4" />
+              {showDeleteConfirm ? '确认删除' : '删除'}
+            </button>
+          ) : <div />}
           <div className="flex gap-2">
             <button onClick={onClose}
               className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors">取消</button>
             <button onClick={handleSave}
-              className="px-4 py-2 rounded-lg text-sm font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors">保存</button>
+              className={`px-4 py-2 rounded-lg text-sm font-medium text-white transition-colors ${
+                isNew ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-blue-500 hover:bg-blue-600'
+              }`}>
+              {isNew ? '添加' : '保存'}
+            </button>
           </div>
         </div>
       </div>
