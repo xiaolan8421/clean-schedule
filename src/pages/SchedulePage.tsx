@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Share2, Plus, Trash2, Settings, MoreHorizontal, Check } from 'lucide-react'
 import type { Semester, Course } from '../types'
@@ -7,7 +7,6 @@ import {
   getDayName,
 } from '../utils/scheduleUtils'
 import { CourseGrid } from '../components/CourseGrid'
-import { WeekSelector } from '../components/WeekSelector'
 import { ShareMenu } from '../components/ShareMenu'
 import { CourseEditModal } from '../components/CourseEditModal'
 import { SettingsModal } from '../components/SettingsModal'
@@ -99,6 +98,21 @@ export function SchedulePage() {
     saveAppSettings(newSettings)
   }, [])
 
+  // ─── 滑动切周 ───
+  const touchStartX = useRef(0)
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX
+  }, [])
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      const delta = e.changedTouches[0].clientX - touchStartX.current
+      if (Math.abs(delta) < 50) return
+      if (delta < 0 && week < 20) setWeek(week + 1)
+      if (delta > 0 && week > 1) setWeek(week - 1)
+    },
+    [week]
+  )
+
   const handleSaveCourse = useCallback((course: Course) => {
     setSchedules((prev) =>
       prev.map((s) => {
@@ -186,14 +200,32 @@ export function SchedulePage() {
         style={{ background: 'rgba(250,249,246,0.9)', backdropFilter: 'blur-sm' }}
       >
         <div className="flex items-center justify-between px-4 py-2">
-          {/* 左侧：第N周 + 日期 */}
-          <div className="flex items-baseline gap-2">
-            <span className="text-lg font-bold tracking-tight" style={{ color: '#2C2416' }}>
-              第 {week} 周
-            </span>
-            <span className="text-xs" style={{ color: '#8B8378' }}>
-              {todayStr}
-            </span>
+          {/* 左侧：周次切换（箭头+数字+日期） */}
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => week > 1 && setWeek(week - 1)}
+              disabled={week <= 1}
+              className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-20 transition-colors"
+              aria-label="上一周"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B8378" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6" /></svg>
+            </button>
+            <div className="flex items-baseline gap-2">
+              <span className="text-lg font-bold tracking-tight" style={{ color: '#2C2416' }}>
+                第 {week} 周
+              </span>
+              <span className="text-xs" style={{ color: '#8B8378' }}>
+                {todayStr}
+              </span>
+            </div>
+            <button
+              onClick={() => week < 20 && setWeek(week + 1)}
+              disabled={week >= 20}
+              className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-20 transition-colors"
+              aria-label="下一周"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8B8378" strokeWidth="2.5" strokeLinecap="round"><polyline points="9 18 15 12 9 6" /></svg>
+            </button>
           </div>
 
           {/* 右侧：操作按钮 */}
@@ -282,13 +314,14 @@ export function SchedulePage() {
             </div>
           </div>
         </div>
-
-        {/* 周选择器 */}
-        <WeekSelector week={week} onChange={setWeek} />
       </header>
 
       {/* ─── 课表主体 ─── */}
-      <main className="flex-1 px-2 sm:px-5 py-3 page-enter-grid">
+      <main
+        className="flex-1 px-2 sm:px-5 py-3 page-enter-grid select-none"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {currentSemester && (
           <CourseGrid
             courses={currentSemester.courses}

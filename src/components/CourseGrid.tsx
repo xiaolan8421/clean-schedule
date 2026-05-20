@@ -135,7 +135,7 @@ export function CourseGrid({
   const gap = isMobile ? 2 : 4
   const timeColW = isMobile ? '24px' : '44px'
   const dayCols = isMobile ? 'repeat(7, minmax(0, 1fr))' : 'repeat(7, 1fr)'
-  const rowH = isMobile ? 54 : 58
+  const rowH = isMobile ? 62 : 58
 
   return (
     <div className="relative">
@@ -267,7 +267,6 @@ export function CourseGrid({
                               animationDelay: `${idx * 15}ms`,
                               height: courseSpan > 1 ? '100%' : undefined,
                               minHeight: `${rowH - gap - 2}px`,
-                              overflow: 'hidden',
                               cursor: readOnly ? 'default' : 'pointer',
                               display: 'flex',
                               flexDirection: 'column',
@@ -282,17 +281,13 @@ export function CourseGrid({
                               }
                             }}
                           >
-                            {/* 课程名 — 允许多行 */}
+                            {/* 课程名 — 完整显示 */}
                             <div
                               style={{
                                 fontSize: isMobile ? '10px' : '13px',
                                 fontWeight: 600,
                                 color: palette.text,
                                 lineHeight: 1.3,
-                                overflow: 'hidden',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
                                 wordBreak: 'break-all',
                               }}
                             >
@@ -307,9 +302,7 @@ export function CourseGrid({
                                   lineHeight: 1.3,
                                   color: palette.text,
                                   opacity: 0.7,
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap',
+                                  wordBreak: 'break-all',
                                   marginTop: '1px',
                                 }}
                               >
@@ -325,9 +318,7 @@ export function CourseGrid({
                                   lineHeight: 1.3,
                                   color: palette.text,
                                   opacity: 0.55,
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap',
+                                  wordBreak: 'break-all',
                                   marginTop: '1px',
                                 }}
                               >
