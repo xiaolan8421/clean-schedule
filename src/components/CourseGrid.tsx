@@ -96,7 +96,6 @@ export function CourseGrid({
   const weekOdd = isOddWeek(currentWeek)
   const todayDay = new Date().getDay() || 7
 
-  /** 某天某节是否有在此开始的课程 */
   const coursesStartingAt = (day: number, period: number): Course[] => {
     return courses.filter(
       (c) =>
@@ -106,7 +105,6 @@ export function CourseGrid({
     )
   }
 
-  /** 某天某节是否被更早开始的跨节课程覆盖 */
   const isCovered = (day: number, period: number): boolean => {
     return courses.some(
       (c) =>
@@ -117,12 +115,9 @@ export function CourseGrid({
     )
   }
 
-  /** 当前时间是否落在某个格子里的课程范围内 */
   const isCurrentInCell = (day: number, period: number): boolean => {
     if (!currentHighlight || currentHighlight.dayOfWeek !== day) return false
-    // 直接命中且未被覆盖
     if (currentHighlight.period === period && !isCovered(day, period)) return true
-    // 当前节次落在某个从此格开始的课程跨度内
     const starting = coursesStartingAt(day, period)
     return starting.some(
       (c) =>
@@ -135,41 +130,38 @@ export function CourseGrid({
   const getCourseIndex = () => courseIndex.current++
   courseIndex.current = 0
 
+  // ─── 移动端极度紧凑布局 ───
+  const periodColW = isMobile ? '20px' : 'minmax(36px, 48px)'
+  const dayCols = isMobile ? 'repeat(7, minmax(0, 1fr))' : 'repeat(7, 1fr)'
+
   return (
     <div className="relative">
-      {/* 表格容器 */}
       <div
-        className="overflow-x-auto scrollbar-hide custom-scrollbar rounded-2xl border border-ink-light bg-paper-dark/60 shadow-paper"
+        className="overflow-x-auto scrollbar-hide custom-scrollbar rounded-xl border border-ink-light/30 bg-paper-dark/60 shadow-paper"
         id="course-grid"
       >
         <div
           className="grid"
-          style={{
-            gridTemplateColumns: isMobile
-              ? `24px repeat(7, 1fr)`
-              : `minmax(36px, 48px) repeat(7, 1fr)`,
-          }}
+          style={{ gridTemplateColumns: `${periodColW} ${dayCols}` }}
         >
           {/* ─── 表头行 ─── */}
-          <div className="sticky top-0 left-0 z-20 bg-paper-dark border-b border-r border-ink-light px-0.5 py-2 text-center">
-            <span className="text-[10px] sm:text-[11px] font-medium text-ink-muted tracking-wide">
-              节
-            </span>
+          <div className="sticky top-0 left-0 z-20 bg-paper-dark border-b border-r border-ink-light/30 px-0 py-1.5 text-center">
+            <span className="text-[10px] font-medium text-ink-muted leading-none">节</span>
           </div>
           {ALL_DAYS.map((day) => (
             <div
               key={day}
-              className={`sticky top-0 z-10 border-b border-ink-light px-0.5 py-2 text-center transition-colors ${
-                day === todayDay ? 'bg-accent-soft' : 'bg-paper-dark'
+              className={`sticky top-0 z-10 border-b border-ink-light/30 px-0 py-1.5 text-center ${
+                day === todayDay ? 'bg-accent-soft/60' : 'bg-paper-dark'
               }`}
             >
-              <span className="text-[11px] sm:text-xs font-semibold text-ink">
+              <span className="text-[11px] font-semibold text-ink leading-none">
                 {isMobile ? SHORT_DAY_NAMES[day] : getDayName(day)}
               </span>
               {day === todayDay && (
-                <span className={`${isMobile ? 'block text-[8px] leading-none' : 'block text-[9px] mt-0.5'} text-accent font-medium`}>
+                <div className="text-[8px] text-accent font-medium leading-none mt-0.5">
                   {isMobile ? '今' : '今天'}
-                </span>
+                </div>
               )}
             </div>
           ))}
@@ -182,20 +174,16 @@ export function CourseGrid({
             return (
               <div key={period} className="contents">
                 {/* 节次标签 */}
-                <div className="sticky left-0 z-10 bg-paper border-b border-r border-ink-light px-0.5 py-1 text-center">
-                  <div className="text-[10px] sm:text-[11px] font-semibold text-ink/70 leading-none">
-                    {period}
-                  </div>
+                <div className="sticky left-0 z-10 bg-paper border-b border-r border-ink-light/30 px-0 py-0.5 text-center flex flex-col items-center justify-center"
+                  style={{ minHeight: isMobile ? '36px' : '62px' }}>
+                  <span className="text-[10px] font-semibold text-ink/70 leading-none">{period}</span>
                   {!isMobile && (
-                    <div className="text-[8px] sm:text-[9px] text-ink-muted/50 leading-none mt-0.5">
-                      {timeStr}
-                    </div>
+                    <span className="text-[9px] text-ink-muted/50 leading-none mt-0.5">{timeStr}</span>
                   )}
                 </div>
 
                 {/* 每天格子 */}
                 {ALL_DAYS.map((day) => {
-                  // 被跨节课程覆盖的格子跳过
                   if (isCovered(day, period)) {
                     return <div key={`${day}-${period}`} />
                   }
@@ -207,30 +195,37 @@ export function CourseGrid({
                   return (
                     <div
                       key={`${day}-${period}`}
-                      className={`border-b border-r border-ink-light/50 p-px relative transition-colors ${
+                      className={`p-0 relative transition-colors ${
                         isToday ? 'bg-paper-dark/40' : ''
                       } ${highlight ? 'current-period-highlight' : ''}`}
-                      style={{ minHeight: isMobile ? '38px' : '62px' }}
+                      style={{
+                        minHeight: isMobile ? '36px' : '62px',
+                        borderBottom: '0.5px solid rgba(191, 185, 175, 0.25)',
+                        borderRight: '0.5px solid rgba(191, 185, 175, 0.25)',
+                      }}
                     >
                       {startingCourses.map((course) => {
-                        const idx = getCourseIndex()
                         const bg = getCourseColor(course.name)
                         const borderColor = getCourseBorderColor(course.name)
                         const span = course.endPeriod - course.startPeriod + 1
+                        const idx = getCourseIndex()
 
                         return (
                           <div
                             key={course.id}
-                            className={`rounded-md px-1 py-0.5 sm:px-1.5 sm:py-1 cursor-pointer select-none
-                              shadow-card hover:shadow-card-hover transition-all duration-200
+                            className={`cursor-pointer select-none transition-all duration-200
                               hover:-translate-y-px active:translate-y-0 active:scale-[0.98]
                               ${mounted ? 'course-card-enter' : ''}`}
                             style={{
                               backgroundColor: bg,
-                              borderLeft: `2px solid ${borderColor}`,
+                              borderLeft: `1.5px solid ${borderColor}`,
                               gridRow: span > 1 ? `span ${span}` : undefined,
-                              animationDelay: `${idx * 20}ms`,
-                              height: span > 1 ? `${span * 100}%` : undefined,
+                              animationDelay: `${idx * 15}ms`,
+                              padding: isMobile ? '1px 1.5px' : '2px 6px',
+                              borderRadius: isMobile ? '3px' : '6px',
+                              boxShadow: '0 0.5px 1px rgba(44, 36, 22, 0.04)',
+                              height: '100%',
+                              overflow: 'hidden',
                             }}
                             onContextMenu={(e) => handleContextMenu(e, course)}
                             onTouchStart={() => handleTouchStart(course)}
@@ -242,46 +237,45 @@ export function CourseGrid({
                               }
                             }}
                           >
-                            {/* 课程名 */}
-                            <div className="flex items-start justify-between gap-0.5">
+                            <div className="flex items-start justify-between gap-0">
                               <span
-                                className={`font-semibold text-ink/90 truncate leading-tight ${
-                                  isMobile ? 'text-[9px]' : 'text-[11px] sm:text-xs'
-                                }`}
+                                className="font-bold text-ink/90 truncate leading-tight"
+                                style={{ fontSize: isMobile ? '9px' : '11px' }}
                               >
                                 {course.name}
                               </span>
-                              {course.startPeriod !== course.endPeriod && (
-                                <span
-                                  className={`text-ink-muted/50 flex-shrink-0 tabular-nums ${
-                                    isMobile ? 'text-[7px]' : 'text-[8px] sm:text-[9px]'
-                                  }`}
-                                >
+                              {course.startPeriod !== course.endPeriod && !isMobile && (
+                                <span className="text-[8px] text-ink-muted/50 flex-shrink-0 tabular-nums ml-0.5">
                                   {course.startPeriod}-{course.endPeriod}
                                 </span>
                               )}
                             </div>
 
-                            {/* 详情：教师 + 地点 */}
-                            {(course.location || course.teacher) && (
+                            {/* 详情行：教师+地点 */}
+                            {(course.teacher || course.location) && (
                               <div
-                                className={`text-ink-muted/70 leading-tight truncate mt-px ${
-                                  isMobile ? 'text-[8px]' : 'text-[9px] sm:text-[10px]'
-                                }`}
+                                className="text-ink-muted/70 truncate leading-tight"
+                                style={{ fontSize: isMobile ? '7px' : '9px', marginTop: '1px' }}
                               >
                                 {[course.teacher, course.location].filter(Boolean).join(' · ')}
                               </div>
                             )}
 
-                            {/* 周次标签（非全周时显示） */}
+                            {/* 周次标签 */}
                             {course.weekType !== 'all' && (
-                              <span
-                                className={`inline-block mt-0.5 px-1 py-px rounded-full bg-white/60 text-ink-muted/70 font-medium ${
-                                  isMobile ? 'text-[7px]' : 'text-[8px] sm:text-[9px]'
-                                }`}
+                              <div
+                                className="bg-white/50 text-ink-muted/70 font-medium"
+                                style={{
+                                  fontSize: isMobile ? '6px' : '8px',
+                                  marginTop: '1px',
+                                  padding: '0 3px',
+                                  borderRadius: '2px',
+                                  display: 'inline-block',
+                                  lineHeight: '1.4',
+                                }}
                               >
                                 {formatWeekLabel(course.weekType, course.weekStart, course.weekEnd)}
-                              </span>
+                              </div>
                             )}
                           </div>
                         )
@@ -296,7 +290,7 @@ export function CourseGrid({
       </div>
 
       {/* 图例 */}
-      <div className="mt-3 flex items-center gap-5 text-xs text-ink-muted/70 px-1">
+      <div className="mt-2.5 flex items-center gap-5 text-xs text-ink-muted/70 px-1">
         <span>
           第 <strong className="text-ink/80 font-semibold">{currentWeek}</strong> 周
           <span className="mx-1.5 text-ink-light">·</span>
@@ -319,19 +313,14 @@ export function CourseGrid({
           }}
         >
           <button
-            onClick={() => {
-              onEditCourse(contextMenu.course)
-              setContextMenu(null)
-            }}
+            onClick={() => { onEditCourse(contextMenu.course); setContextMenu(null) }}
             className="w-full text-left px-4 py-2.5 text-[13px] text-ink hover:bg-accent-soft transition-colors"
           >
             编辑课程
           </button>
           <button
             onClick={() => {
-              if (confirm('确定删除此课程？')) {
-                onDeleteCourse(contextMenu.course.id)
-              }
+              if (confirm('确定删除此课程？')) onDeleteCourse(contextMenu.course.id)
               setContextMenu(null)
             }}
             className="w-full text-left px-4 py-2.5 text-[13px] text-red-500/90 hover:bg-red-50 transition-colors"
