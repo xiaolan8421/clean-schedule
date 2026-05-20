@@ -20,6 +20,7 @@ interface ContextMenuState {
 
 const ALL_DAYS = [1, 2, 3, 4, 5, 6, 7]
 const SHORT_DAY_NAMES = ['', '一', '二', '三', '四', '五', '六', '日']
+const TOTAL_PERIODS = 11
 
 export function CourseGrid({
   courses,
@@ -131,11 +132,10 @@ export function CourseGrid({
   courseIndex.current = 0
 
   // ─── 布局参数 ───
-  const gap = isMobile ? 4 : 5
-  // 移动端：每列至少 90px，超出屏幕自动横向滚动
-  const timeColW = isMobile ? '36px' : '48px'
-  const dayCols = isMobile ? 'repeat(7, minmax(90px, 1fr))' : 'repeat(7, 1fr)'
-  const rowH = isMobile ? 44 : 56
+  const gap = isMobile ? 2 : 4
+  const timeColW = isMobile ? '24px' : '44px'
+  const dayCols = isMobile ? 'repeat(7, minmax(0, 1fr))' : 'repeat(7, 1fr)'
+  const rowH = isMobile ? 54 : 58
 
   return (
     <div className="relative">
@@ -149,15 +149,15 @@ export function CourseGrid({
           style={{
             gridTemplateColumns: `${timeColW} ${dayCols}`,
             gap: `${gap}px`,
-            padding: `${gap}px`,
+            padding: isMobile ? '2px' : '4px',
           }}
         >
           {/* ─── 表头行 ─── */}
           <div
             className="flex items-center justify-center"
             style={{
-              height: isMobile ? '28px' : '36px',
-              fontSize: '10px',
+              height: isMobile ? '24px' : '34px',
+              fontSize: '9px',
               color: '#8B8378',
               fontWeight: 500,
             }}
@@ -169,12 +169,12 @@ export function CourseGrid({
               key={day}
               className="flex flex-col items-center justify-center"
               style={{
-                height: isMobile ? '28px' : '36px',
+                height: isMobile ? '24px' : '34px',
                 fontSize: isMobile ? '10px' : '12px',
                 fontWeight: 600,
                 color: day === todayDay ? '#C88D1A' : '#5C5548',
                 background: day === todayDay ? 'rgba(200,141,26,0.08)' : 'transparent',
-                borderRadius: '8px',
+                borderRadius: '6px',
               }}
             >
               <span style={{ lineHeight: 1.2 }}>
@@ -184,7 +184,7 @@ export function CourseGrid({
           ))}
 
           {/* ─── 课程区域 ─── */}
-          {Array.from({ length: 12 }, (_, i) => i + 1).map((period) => {
+          {Array.from({ length: TOTAL_PERIODS }, (_, i) => i + 1).map((period) => {
             const time = getPeriodTime(period)
             const timeStr = `${String(time.startHour).padStart(2, '0')}:${String(time.startMin).padStart(2, '0')}`
 
@@ -198,7 +198,7 @@ export function CourseGrid({
                     color: '#8B8378',
                   }}
                 >
-                  <span style={{ fontSize: '10px', fontWeight: 600, lineHeight: 1 }}>
+                  <span style={{ fontSize: '9px', fontWeight: 600, lineHeight: 1 }}>
                     {period}
                   </span>
                   {!isMobile && (
@@ -218,7 +218,6 @@ export function CourseGrid({
                   const highlight = isCurrentInCell(day, period)
                   const isToday = day === todayDay
 
-                  // 空单元格
                   if (startingCourses.length === 0) {
                     return (
                       <div
@@ -226,20 +225,16 @@ export function CourseGrid({
                         className={highlight ? 'current-period-highlight' : ''}
                         style={{
                           minHeight: `${rowH}px`,
-                          borderRadius: '10px',
-                          background: isToday ? 'rgba(200,141,26,0.04)' : 'rgba(0,0,0,0.01)',
+                          borderRadius: '8px',
+                          background: isToday ? 'rgba(200,141,26,0.03)' : 'rgba(0,0,0,0.01)',
                         }}
                       />
                     )
                   }
 
-                  // 有课程：计算跨节数
                   const maxSpan = Math.max(
                     ...startingCourses.map((c) => c.endPeriod - c.startPeriod + 1)
                   )
-                  const span = startingCourses[0].endPeriod - startingCourses[0].startPeriod + 1
-                  // 单节课程在手机上适当压缩字号
-                  const compact = isMobile && span === 1
 
                   return (
                     <div
@@ -266,9 +261,9 @@ export function CourseGrid({
                             style={{
                               backgroundColor: palette.bg,
                               borderLeft: `3px solid ${palette.border}`,
-                              borderRadius: '12px',
-                              padding: compact ? '4px 6px' : '8px 8px 8px 7px',
-                              boxShadow: '0 2px 8px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
+                              borderRadius: isMobile ? '8px' : '12px',
+                              padding: isMobile ? '5px 4px 5px 3px' : '8px 8px 8px 7px',
+                              boxShadow: '0 1px 4px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
                               animationDelay: `${idx * 15}ms`,
                               height: courseSpan > 1 ? '100%' : undefined,
                               minHeight: `${rowH - gap - 2}px`,
@@ -287,64 +282,72 @@ export function CourseGrid({
                               }
                             }}
                           >
-                            {/* 课程名 */}
+                            {/* 课程名 — 允许多行 */}
                             <div
                               style={{
-                                fontSize: compact ? '11px' : isMobile ? '13px' : '14px',
+                                fontSize: isMobile ? '10px' : '13px',
                                 fontWeight: 600,
                                 color: palette.text,
                                 lineHeight: 1.3,
                                 overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                wordBreak: 'break-all',
                               }}
                             >
                               {course.name}
                             </div>
 
-                            {/* 教师 + 地点 */}
-                            {(course.teacher || course.location) && (
+                            {/* 地点 */}
+                            {course.location && (
                               <div
                                 style={{
-                                  fontSize: compact ? '9px' : '11px',
-                                  lineHeight: 1.4,
+                                  fontSize: isMobile ? '9px' : '11px',
+                                  lineHeight: 1.3,
+                                  color: palette.text,
+                                  opacity: 0.7,
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
                                   whiteSpace: 'nowrap',
-                                  marginTop: '2px',
+                                  marginTop: '1px',
                                 }}
                               >
-                                {course.teacher && (
-                                  <span style={{ color: palette.text, opacity: 0.6 }}>
-                                    👤 {course.teacher}
-                                  </span>
-                                )}
-                                {course.teacher && course.location && (
-                                  <span style={{ color: palette.text, opacity: 0.35, margin: '0 3px' }}>
-                                    ·
-                                  </span>
-                                )}
-                                {course.location && (
-                                  <span style={{ color: palette.text, opacity: 0.6 }}>
-                                    📍 {course.location}
-                                  </span>
-                                )}
+                                📍{course.location}
+                              </div>
+                            )}
+
+                            {/* 教师 */}
+                            {course.teacher && (
+                              <div
+                                style={{
+                                  fontSize: isMobile ? '8px' : '10px',
+                                  lineHeight: 1.3,
+                                  color: palette.text,
+                                  opacity: 0.55,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                  marginTop: '1px',
+                                }}
+                              >
+                                👤{course.teacher}
                               </div>
                             )}
 
                             {/* 周次标签 */}
                             {course.weekType !== 'all' && (
-                              <div style={{ marginTop: 'auto', paddingTop: compact ? '1px' : '3px' }}>
+                              <div style={{ marginTop: 'auto', paddingTop: '2px' }}>
                                 <span
                                   style={{
-                                    fontSize: compact ? '8px' : '10px',
+                                    fontSize: isMobile ? '7px' : '10px',
                                     fontWeight: 500,
                                     color: palette.text,
-                                    opacity: 0.5,
+                                    opacity: 0.45,
                                     background: 'rgba(255,255,255,0.5)',
-                                    padding: '0 4px',
-                                    borderRadius: '4px',
-                                    lineHeight: 1.6,
+                                    padding: '0 3px',
+                                    borderRadius: '3px',
+                                    lineHeight: 1.5,
                                   }}
                                 >
                                   {formatWeekLabel(course.weekType, course.weekStart, course.weekEnd)}
@@ -361,25 +364,6 @@ export function CourseGrid({
             )
           })}
         </div>
-      </div>
-
-      {/* 图例 */}
-      <div
-        className="mt-3 flex items-center gap-5 px-1 select-none"
-        style={{ fontSize: '12px', color: '#8B8378' }}
-      >
-        <span>
-          第{' '}
-          <strong style={{ color: '#2C2416', fontWeight: 600 }}>{currentWeek}</strong>{' '}
-          周
-          <span style={{ margin: '0 6px', color: '#BFB9AF' }}>·</span>
-          <span style={{ opacity: 0.6 }}>{weekOdd ? '奇数周' : '偶数周'}</span>
-        </span>
-        {todayDay <= 7 && (
-          <span className="hidden sm:inline" style={{ opacity: 0.5 }}>
-            今天 <strong style={{ color: '#2C2416' }}>{getDayName(todayDay)}</strong>
-          </span>
-        )}
       </div>
 
       {/* 右键 / 长按菜单 */}

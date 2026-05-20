@@ -1,20 +1,28 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Share2, Plus, Trash2, Settings, MoreHorizontal } from 'lucide-react'
+import { Share2, Plus, Trash2, Settings, MoreHorizontal, Check } from 'lucide-react'
 import type { Semester, Course } from '../types'
 import {
   loadSchedules, saveSchedules, getCurrentWeekNumber,
-  generateId,
+  getDayName,
 } from '../utils/scheduleUtils'
 import { CourseGrid } from '../components/CourseGrid'
 import { WeekSelector } from '../components/WeekSelector'
 import { ShareMenu } from '../components/ShareMenu'
 import { CourseEditModal } from '../components/CourseEditModal'
-import { SemesterSwitcher } from '../components/SemesterSwitcher'
 import { SettingsModal } from '../components/SettingsModal'
 import { OfflineBanner } from '../components/OfflineBanner'
 import { loadSettings as loadAppSettings, saveSettings as saveAppSettings } from '../utils/settings'
 import type { AppSettings } from '../utils/settings'
+
+function formatToday(): string {
+  const now = new Date()
+  const y = now.getFullYear()
+  const m = now.getMonth() + 1
+  const d = now.getDate()
+  const dayName = getDayName(now.getDay() || 7)
+  return `${y}/${m}/${d} ${dayName}`
+}
 
 export function SchedulePage() {
   const navigate = useNavigate()
@@ -38,6 +46,7 @@ export function SchedulePage() {
   const [showSettings, setShowSettings] = useState(false)
   const [showSettingsModal, setShowSettingsModal] = useState(false)
   const [appSettings, setAppSettings] = useState<AppSettings>(() => loadAppSettings())
+  const [todayStr] = useState(() => formatToday())
 
   useEffect(() => {
     if (currentSemester) {
@@ -57,6 +66,7 @@ export function SchedulePage() {
 
   const handleSemesterChange = useCallback((semesterId: string) => {
     setCurrentSemesterId(semesterId)
+    setShowSettings(false)
   }, [])
 
   const handleSemesterRename = useCallback(
@@ -118,37 +128,38 @@ export function SchedulePage() {
   // ─── 空状态 ───
   if (schedules.length === 0) {
     return (
-      <div className="min-h-screen bg-paper flex flex-col">
+      <div className="min-h-screen flex flex-col" style={{ background: '#FAF9F6' }}>
         <OfflineBanner />
-        <header className="sticky top-0 z-40 bg-paper/90 backdrop-blur-sm border-b border-ink-light/60">
+        <header className="sticky top-0 z-40 border-b border-gray-200/60" style={{ background: 'rgba(250,249,246,0.9)', backdropFilter: 'blur-sm' }}>
           <div className="flex items-center justify-between px-5 py-3.5">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-accent" />
-              <h1 className="text-base font-bold text-ink tracking-wide">Clean课表</h1>
+              <span className="w-2 h-2 rounded-full" style={{ background: '#C88D1A' }} />
+              <h1 className="text-base font-bold tracking-wide" style={{ color: '#2C2416' }}>Clean课表</h1>
             </div>
             <button
               onClick={() => setShowSettingsModal(true)}
-              className="p-2 rounded-full hover:bg-ink-light/40 transition-colors"
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
               aria-label="设置"
             >
-              <Settings className="w-4 h-4 text-ink-muted" />
+              <Settings className="w-4 h-4" style={{ color: '#8B8378' }} />
             </button>
           </div>
         </header>
 
         <div className="flex-1 flex flex-col items-center justify-center px-6">
-          <div className="w-24 h-24 rounded-3xl bg-paper-dark flex items-center justify-center mb-5 shadow-paper-md">
-            <Plus className="w-10 h-10 text-accent/60" />
+          <div className="w-24 h-24 rounded-3xl flex items-center justify-center mb-5 shadow-md" style={{ background: '#F3F1EC' }}>
+            <Plus className="w-10 h-10" style={{ color: 'rgba(200,141,26,0.6)' }} />
           </div>
-          <h1 className="text-xl font-bold text-ink mb-1.5 tracking-wide">欢迎使用 Clean课表</h1>
-          <p className="text-sm text-ink-muted/80 text-center mb-8 leading-relaxed max-w-xs">
+          <h1 className="text-xl font-bold mb-1.5 tracking-wide" style={{ color: '#2C2416' }}>欢迎使用 Clean课表</h1>
+          <p className="text-sm text-center mb-8 leading-relaxed max-w-xs" style={{ color: 'rgba(139,131,120,0.8)' }}>
             上传 Excel 或 ICS 文件导入课表<br />
             或使用分享链接查看朋友的课表
           </p>
           <button
             onClick={() => navigate('/import')}
-            className="px-8 py-3 bg-ink text-paper rounded-2xl text-sm font-semibold
-              hover:bg-ink/90 active:scale-[0.97] transition-all shadow-paper-md hover:shadow-paper-lg"
+            className="px-8 py-3 rounded-2xl text-sm font-semibold
+              hover:opacity-90 active:scale-[0.97] transition-all shadow-md hover:shadow-lg"
+            style={{ background: '#2C2416', color: '#FAF9F6' }}
           >
             导入课表
           </button>
@@ -166,59 +177,81 @@ export function SchedulePage() {
   }
 
   return (
-    <div className="min-h-screen bg-paper flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ background: '#FAF9F6' }}>
       <OfflineBanner />
 
       {/* ─── 顶部栏 ─── */}
-      <header className="sticky top-0 z-40 bg-paper/90 backdrop-blur-sm border-b border-ink-light/60 page-enter-header">
-        <div className="flex items-center justify-between px-4 py-2.5">
-          {/* 左侧：标题 */}
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-accent flex-shrink-0" />
-            <h1 className="text-base font-bold text-ink tracking-wide">Clean课表</h1>
+      <header
+        className="sticky top-0 z-40 border-b border-gray-200/60 page-enter-header"
+        style={{ background: 'rgba(250,249,246,0.9)', backdropFilter: 'blur-sm' }}
+      >
+        <div className="flex items-center justify-between px-4 py-2">
+          {/* 左侧：第N周 + 日期 */}
+          <div className="flex items-baseline gap-2">
+            <span className="text-lg font-bold tracking-tight" style={{ color: '#2C2416' }}>
+              第 {week} 周
+            </span>
+            <span className="text-xs" style={{ color: '#8B8378' }}>
+              {todayStr}
+            </span>
           </div>
-
-          {/* 中间：学期切换 */}
-          <SemesterSwitcher
-            semesters={schedules}
-            currentSemesterId={currentSemesterId}
-            onChange={handleSemesterChange}
-            onAdd={() => navigate('/import')}
-            onRename={handleSemesterRename}
-          />
 
           {/* 右侧：操作按钮 */}
           <div className="flex items-center gap-0.5">
             <button
               onClick={() => setShowShareMenu(true)}
-              className="p-2 rounded-full hover:bg-ink-light/40 transition-colors"
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
               aria-label="分享课表"
             >
-              <Share2 className="w-4 h-4 text-ink-muted" />
+              <Share2 className="w-4 h-4" style={{ color: '#8B8378' }} />
             </button>
 
             {/* 更多菜单 */}
             <div className="relative">
               <button
                 onClick={() => setShowSettings(!showSettings)}
-                className="p-2 rounded-full hover:bg-ink-light/40 transition-colors"
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
                 aria-label="更多"
               >
-                <MoreHorizontal className="w-4 h-4 text-ink-muted" />
+                <MoreHorizontal className="w-4 h-4" style={{ color: '#8B8378' }} />
               </button>
 
               {showSettings && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowSettings(false)} />
-                  <div className="absolute right-0 top-full mt-1 w-44 bg-paper border border-ink-light rounded-xl shadow-paper-lg z-50 py-1.5 overflow-hidden">
+                  <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden">
+                    {/* 学期切换 */}
+                    <div className="px-3 py-1">
+                      <div className="text-[10px] text-gray-400 font-medium px-1 mb-0.5">当前学期</div>
+                      {schedules.map((s) => (
+                        <button
+                          key={s.id}
+                          onClick={() => handleSemesterChange(s.id)}
+                          className="w-full text-left px-1 py-1.5 text-[12px] rounded-md transition-colors flex items-center justify-between"
+                          style={{
+                            color: s.id === currentSemesterId ? '#2C2416' : '#8B8378',
+                            fontWeight: s.id === currentSemesterId ? 600 : 400,
+                            background: s.id === currentSemesterId ? 'rgba(200,141,26,0.06)' : 'transparent',
+                          }}
+                        >
+                          <span className="truncate">{s.name}</span>
+                          {s.id === currentSemesterId && (
+                            <Check className="w-3.5 h-3.5 flex-shrink-0" style={{ color: '#C88D1A' }} />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="border-t border-gray-100 my-1" />
+
                     <button
                       onClick={() => {
                         navigate('/import')
                         setShowSettings(false)
                       }}
-                      className="w-full text-left px-4 py-2.5 text-[13px] text-ink hover:bg-accent-soft transition-colors flex items-center gap-2.5"
+                      className="w-full text-left px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2.5"
                     >
-                      <Plus className="w-4 h-4 text-ink-muted" />
+                      <Plus className="w-4 h-4 text-gray-400" />
                       导入课表
                     </button>
                     <button
@@ -226,17 +259,19 @@ export function SchedulePage() {
                         setShowSettingsModal(true)
                         setShowSettings(false)
                       }}
-                      className="w-full text-left px-4 py-2.5 text-[13px] text-ink hover:bg-accent-soft transition-colors flex items-center gap-2.5"
+                      className="w-full text-left px-4 py-2.5 text-[13px] text-gray-700 hover:bg-gray-50 transition-colors flex items-center gap-2.5"
                     >
-                      <Settings className="w-4 h-4 text-ink-muted" />
+                      <Settings className="w-4 h-4 text-gray-400" />
                       AI 设置
                     </button>
-                    <div className="border-t border-ink-light/60 my-1" />
+
+                    <div className="border-t border-gray-100 my-1" />
+
                     <button
                       onClick={() => {
                         handleDeleteSemester()
                       }}
-                      className="w-full text-left px-4 py-2.5 text-[13px] text-red-500/90 hover:bg-red-50 transition-colors flex items-center gap-2.5"
+                      className="w-full text-left px-4 py-2.5 text-[13px] text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2.5"
                     >
                       <Trash2 className="w-4 h-4" />
                       删除当前学期
@@ -253,7 +288,7 @@ export function SchedulePage() {
       </header>
 
       {/* ─── 课表主体 ─── */}
-      <main className="flex-1 px-3 sm:px-5 py-4 page-enter-grid">
+      <main className="flex-1 px-2 sm:px-5 py-3 page-enter-grid">
         {currentSemester && (
           <CourseGrid
             courses={currentSemester.courses}
@@ -264,11 +299,6 @@ export function SchedulePage() {
           />
         )}
       </main>
-
-      {/* ─── 底部 ─── */}
-      <footer className="text-center py-4 text-[11px] text-ink-muted/50 tracking-wide page-enter-footer">
-        Clean课表 · 极简课程表
-      </footer>
 
       {/* ─── 弹窗 ─── */}
       {currentSemester && (
