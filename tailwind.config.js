@@ -8,9 +8,9 @@ export default {
     extend: {
       colors: {
         paper: {
-          DEFAULT: '#faf7f2',
-          dark: '#f3efe8',
-          darker: '#e8e3d9',
+          DEFAULT: '#FAF9F6',
+          dark: '#F3F1EC',
+          darker: '#E8E5DE',
         },
         ink: {
           DEFAULT: '#2c2416',
